@@ -1,3 +1,6 @@
 {
-	"cSpell.words": ["gonwa", "livekit", "remult", "Webrtc"]
+	"cSpell.words": ["gonwa", "kose", "livekit", "remult", "Webrtc"],
+	"files.associations": {
+		"*.css": "tailwindcss"
+	}
 }
