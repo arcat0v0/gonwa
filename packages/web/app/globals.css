@@ -59,8 +59,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-@font-face {
-  font-family: '--font-kose';
-  src: url('/fonts/kose/XiaolaiSC-Regular.ttf') format('tff');
-}

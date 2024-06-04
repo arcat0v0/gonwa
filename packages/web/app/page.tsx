@@ -1,5 +1,22 @@
-import Image from "next/image";
+import { ConnectCard } from "@/components/connect-card";
+import { useTranslations } from "next-intl";
 
 export default function Home() {
-	return <main className="">落霞与孤鹜齐飞</main>;
+	const tConnectCard = useTranslations("ConnectCard");
+
+	return (
+		<main className="w-screen h-screen flex items-center justify-center">
+			<div className="md:w-[800px] md:h-[500px]">
+				<ConnectCard
+					title={tConnectCard("title")}
+					joinRoomLabel={tConnectCard("joinRoomLabel")}
+					createRoomLabel={tConnectCard("createRoomLabel")}
+					joinRoomInputLabel={tConnectCard("joinRoomInputLabel")}
+					createRoomInputLabel={tConnectCard("createRoomInputLabel")}
+					orLabel={tConnectCard("orLabel")}
+					startLabel={tConnectCard("startLabel")}
+				/>
+			</div>
+		</main>
+	);
 }

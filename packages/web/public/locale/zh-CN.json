@@ -1,0 +1,11 @@
+{
+  "ConnectCard": {
+    "title": "欢迎来到 GonWa",
+    "joinRoomLabel": "加入房间",
+    "createRoomLabel": "创建房间",
+    "joinRoomInputLabel": "请输入房间号",
+    "createRoomInputLabel": "请输入房间名",
+    "orLabel": "或",
+    "startLabel": "开始！"
+  }
+}
