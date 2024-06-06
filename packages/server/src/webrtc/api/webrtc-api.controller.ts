@@ -28,8 +28,8 @@ export class WebrtcApiController {
     return tsRestHandler(c.joinRoom, async ({ body }) => {
       const { roomId, identity } = body;
 
-      const roomIdEncrypted = await this.redisService.get(roomId);
-      if (!roomIdEncrypted) {
+      const roomIdDecrypted = await this.redisService.get(roomId);
+      if (!roomIdDecrypted) {
         return notFoundRes({
           status: 404,
           message: 'not found',
@@ -38,7 +38,7 @@ export class WebrtcApiController {
       }
 
       // 加入房间，redis存储房间内的用户id
-      this.redisService.sadd(roomIdEncrypted, [identity]);
+      this.redisService.sadd(roomIdDecrypted, [identity]);
 
       const at = await this.webrtcService.getToken(roomId, identity);
 
@@ -47,7 +47,7 @@ export class WebrtcApiController {
       }
 
       const userRepo = remult.repo(User);
-      const userIdsInRoom = await this.redisService.smembers(roomIdEncrypted);
+      const userIdsInRoom = await this.redisService.smembers(roomIdDecrypted);
       const usersInRoom = userIdsInRoom.map(async (userId) => {
         const user = await userRepo.findFirst({ id: userId });
         return {
@@ -115,9 +115,9 @@ export class WebrtcApiController {
     return tsRestHandler(c.findRoom, async ({ query }) => {
       const { roomId } = query;
       const roomIdHashed = roomId;
-      const roomIdEncrypted = await this.redisService.get(roomIdHashed);
+      const roomIdDecrypted = await this.redisService.get(roomIdHashed);
 
-      if (!roomIdEncrypted) {
+      if (!roomIdDecrypted) {
         return notFoundRes({
           status: 404,
           message: 'not found',
@@ -126,7 +126,7 @@ export class WebrtcApiController {
       }
 
       const roomRepo = remult.repo(Room);
-      const room = await roomRepo.findFirst({ id: roomIdEncrypted });
+      const room = await roomRepo.findFirst({ id: roomIdDecrypted });
 
       if (!room) {
         return errorRes({
