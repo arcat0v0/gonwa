@@ -1,14 +1,15 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller, Logger, Req, Res } from '@nestjs/common';
 import { LivekitService } from '../livekit/livekit.service';
 import { ConfigService } from '@nestjs/config';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
 import { contract as c } from '@gonwa/share';
 import { RedisService } from '@/db/redis/redis.service';
 import { Room, User } from '@/db/entity';
-import md5 from 'md5';
+import * as md5 from 'md5'; // must be 'import * as md5'
 import { successRes, errorRes, notFoundRes } from '@/response';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Response, Request } from 'express';
 
 @Controller()
 export class WebrtcApiController {
@@ -27,6 +28,14 @@ export class WebrtcApiController {
   ) {
     this.webrtcService = livekitService;
     this.webrtcMode = this.configService.get('WEBRTC_MODE');
+    this.roomsRepository
+      .find()
+      .then(() => {
+        this.logger.log('database connected');
+      })
+      .catch((error) => {
+        this.logger.error(error);
+      });
   }
 
   @TsRestHandler(c.joinRoom)
@@ -78,22 +87,29 @@ export class WebrtcApiController {
   }
 
   @TsRestHandler(c.createRoom)
-  async createRoom() {
+  async createRoom(@Req() req: Request) {
     return tsRestHandler(c.createRoom, async ({ body }) => {
       const { roomName, roomDescription } = body;
+      const { userId } = req.cookies;
+      if (!userId) {
+        return successRes({
+          status: 600,
+          message: 'unauthorized',
+          data: null,
+        });
+      }
 
       try {
         const room = new Room();
         room.name = roomName;
         room.description = roomDescription;
-        await this.roomsRepository.save(room);
         const roomId = await this.webrtcService.createRoom({ name: room.uuid });
 
-        const roomIdHashed = md5(roomId);
+        const roomIdHashed = md5(roomId, { encoding: 'base64' });
 
         // 在redis缓存一些跟房间有关的数据
         this.redisService.set(roomIdHashed, room.uuid);
-        this.redisService.sadd(room.uuid, []);
+        this.redisService.sadd(room.uuid, [userId]);
 
         const resBody = {
           status: 200,
@@ -102,6 +118,8 @@ export class WebrtcApiController {
             roomId: roomIdHashed,
           },
         };
+
+        await this.roomsRepository.save(room);
 
         return successRes(resBody);
       } catch (error) {
@@ -150,6 +168,31 @@ export class WebrtcApiController {
           description: room.description,
         },
       });
+    });
+  }
+
+  @TsRestHandler(c.registerUser)
+  registerUser(@Res() res: Response) {
+    return tsRestHandler(c.registerUser, async () => {
+      const user = new User();
+
+      user.name = 'test';
+
+      await this.usersRepository.save(user);
+
+      const resBody = {
+        status: 200,
+        message: 'success',
+        data: {
+          userId: user.uuid,
+        },
+      };
+
+      res.cookie('userId', user.uuid);
+
+      this.logger.debug('res:', res);
+
+      return successRes(resBody);
     });
   }
 }

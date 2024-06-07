@@ -1,14 +1,14 @@
 // contract.ts
 
-import { initContract } from '@ts-rest/core';
-import { z } from 'zod';
+import { initContract } from "@ts-rest/core";
+import { z } from "zod";
 
 const c = initContract();
 
 export const contract = c.router({
   getToken: {
-    method: 'GET',
-    path: '/webrtc-api/get-token',
+    method: "GET",
+    path: "/webrtc-api/get-token",
     responses: {
       200: z.object({
         status: z.number(),
@@ -24,8 +24,8 @@ export const contract = c.router({
     }),
   },
   createRoom: {
-    method: 'POST',
-    path: '/webrtc-api/create-room',
+    method: "POST",
+    path: "/webrtc-api/create-room",
     body: z.object({
       roomName: z.string(),
       roomDescription: z.string(),
@@ -41,8 +41,8 @@ export const contract = c.router({
     },
   },
   findRoom: {
-    method: 'GET',
-    path: '/webrtc-api/find-room',
+    method: "GET",
+    path: "/webrtc-api/find-room",
     query: z.object({
       roomId: z.string().optional(),
     }),
@@ -58,8 +58,8 @@ export const contract = c.router({
     },
   },
   joinRoom: {
-    method: 'POST',
-    path: '/webrtc-api/join-room',
+    method: "POST",
+    path: "/webrtc-api/join-room",
     responses: {
       200: z.object({
         status: z.number(),
@@ -75,5 +75,19 @@ export const contract = c.router({
       roomId: z.string(),
       identity: z.string(),
     }),
+  },
+  registerUser: {
+    method: "POST",
+    path: "/webrtc-api/register-user",
+    body: z.object({}).optional(),
+    responses: {
+      200: z.object({
+        status: z.number(),
+        message: z.string(),
+        data: z.object({
+          userId: z.string(),
+        }),
+      }),
+    },
   },
 });

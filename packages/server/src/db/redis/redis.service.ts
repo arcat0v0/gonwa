@@ -91,4 +91,28 @@ export class RedisService {
   async sismember(key: string, value: string): Promise<number> {
     return await this.redisClient.sismember(key, value);
   }
+
+  async zadd(key: string, score: number, member: string): Promise<void> {
+    await this.redisClient.zadd(key, score, member);
+  }
+
+  async zrange(key: string, start: number, stop: number): Promise<string[]> {
+    return await this.redisClient.zrange(key, start, stop);
+  }
+
+  async zrem(key: string, member: string): Promise<void> {
+    await this.redisClient.zrem(key, member);
+  }
+
+  async zcard(key: string): Promise<number> {
+    return await this.redisClient.zcard(key);
+  }
+
+  async zscore(key: string, member: string): Promise<string> {
+    return await this.redisClient.zscore(key, member);
+  }
+
+  async zrank(key: string, member: string): Promise<number> {
+    return await this.redisClient.zrank(key, member);
+  }
 }

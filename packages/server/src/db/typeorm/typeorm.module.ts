@@ -15,7 +15,7 @@ import { Room, User } from '@/db/entity';
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
         entities: [Room, User],
-        synchronize: false,
+        synchronize: true,
       }),
       inject: [ConfigService],
     }),

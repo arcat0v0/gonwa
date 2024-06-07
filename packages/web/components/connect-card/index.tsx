@@ -42,8 +42,14 @@ export function ConnectCard() {
 						roomDescription: "test",
 					},
 				})
-				.then((info) => {
-					console.log(info);
+				.then((res) => {
+					if (res.status === 200 && res.body.status === 600) {
+						client.registerUser({ body: {} }).then((res) => {
+							console.log(res);
+						});
+					} else {
+						console.log(res);
+					}
 				})
 				.catch((err) => {
 					console.log(err);

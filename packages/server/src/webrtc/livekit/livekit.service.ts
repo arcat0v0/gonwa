@@ -38,8 +38,13 @@ export class LivekitService {
   }
 
   async createRoom(opts: CreateOptions): Promise<string> {
-    const room = await this.roomService.createRoom(opts);
-    return room.sid;
+    try {
+      const room = await this.roomService.createRoom(opts);
+      return room.sid;
+    } catch (error) {
+      this.logger.error(`Failed to create room: ${error}`);
+      throw error;
+    }
   }
 
   async getRoom(roomNames: string[] = []) {
