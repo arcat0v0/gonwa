@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Room {
@@ -9,6 +9,7 @@ export class Room {
   name: string;
 
   @Column({ unique: true })
+  @Generated('uuid')
   uuid: string;
 
   @Column()

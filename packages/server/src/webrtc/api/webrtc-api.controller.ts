@@ -1,23 +1,29 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { LivekitService } from '../livekit/livekit.service';
 import { ConfigService } from '@nestjs/config';
 import { TsRestHandler, tsRestHandler } from '@ts-rest/nest';
-import { contract as c } from '@/contracts';
+import { contract as c } from '@gonwa/share';
 import { RedisService } from '@/db/redis/redis.service';
-import { remult } from 'remult';
-import { Room, User } from '@gonwa/share';
+import { Room, User } from '@/db/entity';
 import md5 from 'md5';
 import { successRes, errorRes, notFoundRes } from '@/response';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Controller()
 export class WebrtcApiController {
   private readonly webrtcService: LivekitService;
   private readonly webrtcMode: string;
+  private readonly logger = new Logger('WebrtcApi');
 
   constructor(
     private readonly livekitService: LivekitService,
     private readonly redisService: RedisService,
-    private configService: ConfigService,
+    private readonly configService: ConfigService,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+    @InjectRepository(Room)
+    private roomsRepository: Repository<Room>,
   ) {
     this.webrtcService = livekitService;
     this.webrtcMode = this.configService.get('WEBRTC_MODE');
@@ -46,10 +52,9 @@ export class WebrtcApiController {
         return { status: 404, body: null };
       }
 
-      const userRepo = remult.repo(User);
       const userIdsInRoom = await this.redisService.smembers(roomIdDecrypted);
       const usersInRoom = userIdsInRoom.map(async (userId) => {
-        const user = await userRepo.findFirst({ id: userId });
+        const user = await this.usersRepository.findOneBy({ uuid: userId });
         return {
           name: user.name,
         };
@@ -76,20 +81,19 @@ export class WebrtcApiController {
   async createRoom() {
     return tsRestHandler(c.createRoom, async ({ body }) => {
       const { roomName, roomDescription } = body;
-      const roomRepo = remult.repo(Room);
 
       try {
-        const room = await roomRepo.insert({
-          name: roomName,
-          description: roomDescription,
-        });
-        const roomId = await this.webrtcService.createRoom({ name: room.id });
+        const room = new Room();
+        room.name = roomName;
+        room.description = roomDescription;
+        await this.roomsRepository.save(room);
+        const roomId = await this.webrtcService.createRoom({ name: room.uuid });
 
         const roomIdHashed = md5(roomId);
 
         // 在redis缓存一些跟房间有关的数据
-        this.redisService.set(roomIdHashed, room.id);
-        this.redisService.sadd(room.id, []);
+        this.redisService.set(roomIdHashed, room.uuid);
+        this.redisService.sadd(room.uuid, []);
 
         const resBody = {
           status: 200,
@@ -101,6 +105,7 @@ export class WebrtcApiController {
 
         return successRes(resBody);
       } catch (error) {
+        this.logger.error(error);
         return errorRes({
           status: 500,
           message: 'something get wrong',
@@ -125,8 +130,9 @@ export class WebrtcApiController {
         });
       }
 
-      const roomRepo = remult.repo(Room);
-      const room = await roomRepo.findFirst({ id: roomIdDecrypted });
+      const room = await this.roomsRepository.findOneBy({
+        uuid: roomIdDecrypted,
+      });
 
       if (!room) {
         return errorRes({
