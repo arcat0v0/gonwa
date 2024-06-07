@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import localFont from "next/font/local";
 import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
 	title: "GonWa",
@@ -31,11 +32,12 @@ export default async function RootLayout({
 
 	return (
 		<html lang="en">
-			<body className={cn("bg-gray-200", xiaolai.className)}>
-				<NextIntlClientProvider messages={messages}>
-					{children}
-				</NextIntlClientProvider>
-			</body>
+			<NextIntlClientProvider messages={messages}>
+				<body className={cn("bg-gray-200", xiaolai.className)}>
+					<main>{children}</main>
+					<Toaster />
+				</body>
+			</NextIntlClientProvider>
 		</html>
 	);
 }

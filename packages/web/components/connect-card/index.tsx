@@ -1,45 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { CardContent, CardHeader } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { eventEmitter } from "@/lib/utils";
+import { client } from "@/lib/api";
+import { useTranslations } from "next-intl";
+import { useToast } from "@/components/ui/use-toast";
 
-interface ConnectCardProps {
-	title: string;
-	joinRoomLabel: string;
-	createRoomLabel: string;
-	joinRoomInputLabel: string;
-	createRoomInputLabel: string;
-	orLabel: string;
-	startLabel: string;
-}
+export function ConnectCard() {
+	const t = useTranslations("ConnectCard");
+	const tToast = useTranslations("Toast");
+	const { toast } = useToast();
 
-export function ConnectCard({
-	title,
-	joinRoomLabel,
-	createRoomLabel,
-	joinRoomInputLabel,
-	createRoomInputLabel,
-	orLabel,
-	startLabel,
-}: ConnectCardProps) {
 	const [roomId, setRoomId] = useState("");
 	const [roomName, setRoomName] = useState("");
 
-	function handleSubmit() {
+	async function handleSubmit() {
 		if (roomId) {
-			// join room
+			client
+				.joinRoom({
+					body: { roomId, identity: "test" },
+				})
+				.then((info) => {
+					console.log(info);
+				})
+				.catch((err) => {
+					toast({
+						variant: "destructive",
+						title: tToast("404NotFoundRoomTitle"),
+						description: tToast("404NotFoundRoomDescription"),
+					});
+				});
 		} else if (roomName) {
-			// create room
+			client
+				.createRoom({
+					body: {
+						roomName: "test",
+						roomDescription: "test",
+					},
+				})
+				.then((info) => {
+					console.log(info);
+				})
+				.catch((err) => {
+					console.log(err);
+				});
 		}
 	}
+
+	useEffect(() => {
+		setTimeout(() => {
+			eventEmitter.emit("start");
+		}, 2000);
+	}, []);
 
 	return (
 		<>
 			<CardHeader className="text-center font-semibold text-[30px]">
-				{title}
+				{t("title")}
 			</CardHeader>
 			<CardContent>
 				<form
@@ -47,26 +68,26 @@ export function ConnectCard({
 					action={handleSubmit}
 				>
 					<div className="flex items-center">
-						<Label className="w-[100px] mr-1">{joinRoomLabel}</Label>
+						<Label className="w-[100px] mr-1">{t("joinRoomLabel")}</Label>
 						<Input
-							placeholder={joinRoomInputLabel}
+							placeholder={t("joinRoomInputLabel")}
 							onChange={(e) => setRoomId(e.currentTarget.value)}
 							value={roomId}
 							disabled={roomName !== ""}
 						/>
 					</div>
-					<p className="w-full text-center">{orLabel}</p>
+					<p className="w-full text-center">{t("orLabel")}</p>
 					<div className="flex items-center">
-						<Label className="w-[100px] mr-1">{createRoomLabel}</Label>
+						<Label className="w-[100px] mr-1">{t("createRoomLabel")}</Label>
 						<Input
-							placeholder={createRoomInputLabel}
+							placeholder={t("createRoomInputLabel")}
 							onChange={(e) => setRoomName(e.currentTarget.value)}
 							value={roomName}
 							disabled={roomId !== ""}
 						/>
 					</div>
 					<Button type="submit" className="mt-2">
-						{startLabel}
+						{t("startLabel")}
 					</Button>
 				</form>
 			</CardContent>

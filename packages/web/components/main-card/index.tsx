@@ -1,23 +1,15 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { ConnectCard } from "../connect-card";
 import { Card } from "../ui/card";
-import { useTranslations } from "next-intl";
 import { eventEmitter } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loading } from "../ui/loading";
+import { ConnectCard } from "../connect-card";
 
 export function MainCard() {
-	const tConnectCard = useTranslations("ConnectCard");
 	const [step, setStep] = useState<"join" | "create" | "start">("start");
 	const [isFirstRender, setIsFirstRender] = useState(true);
-
-	const cardVariants = {
-		visible: { opacity: 1, y: 0 },
-		exit: { opacity: 0, y: 400 },
-		enter: { opacity: 0, y: -400 },
-	};
 
 	useEffect(() => {
 		eventEmitter.on("join", () => setStep("join"));
@@ -31,35 +23,49 @@ export function MainCard() {
 		};
 	}, []);
 
-	function ConnectCardWithText() {
-		return (
-			<ConnectCard
-				title={tConnectCard("title")}
-				joinRoomLabel={tConnectCard("joinRoomLabel")}
-				createRoomLabel={tConnectCard("createRoomLabel")}
-				joinRoomInputLabel={tConnectCard("joinRoomInputLabel")}
-				createRoomInputLabel={tConnectCard("createRoomInputLabel")}
-				orLabel={tConnectCard("orLabel")}
-				startLabel={tConnectCard("startLabel")}
-			/>
-		);
-	}
-
 	return (
 		<Card className="md:w-[800px] md:h-[400px] flex items-center justify-center overflow-hidden">
 			<AnimatePresence>
-				<motion.div
-					variants={cardVariants}
-					initial={isFirstRender ? "visible" : "enter"}
-					animate="visible"
-					exit="exit"
-					transition={{ duration: 0.5 }}
-				>
-					<Suspense fallback={<Loading />}>
-						{step === "start" ? <ConnectCardWithText /> : null}
-					</Suspense>
-				</motion.div>
+				<Suspense fallback={<Loading />}>
+					<SwitchStepComponent step={step} isFirstRender={isFirstRender} />
+				</Suspense>
 			</AnimatePresence>
 		</Card>
+	);
+}
+
+function SwitchAnimate({
+	isFirstRender,
+	children,
+}: { isFirstRender: boolean; children: React.ReactNode }) {
+	const cardVariants = {
+		visible: { opacity: 1, y: 0 },
+		exit: { opacity: 0, y: 400 },
+		enter: { opacity: 0, y: -400 },
+	};
+
+	return (
+		<AnimatePresence>
+			<motion.div
+				variants={cardVariants}
+				initial={isFirstRender ? "visible" : "enter"}
+				animate="visible"
+				exit="exit"
+				transition={{ duration: 0.5 }}
+			>
+				{children}
+			</motion.div>
+		</AnimatePresence>
+	);
+}
+
+function SwitchStepComponent({
+	step,
+	isFirstRender,
+}: { step: "join" | "create" | "start"; isFirstRender: boolean }) {
+	return (
+		<SwitchAnimate isFirstRender={isFirstRender}>
+			{step === "start" ? <ConnectCard /> : null}
+		</SwitchAnimate>
 	);
 }

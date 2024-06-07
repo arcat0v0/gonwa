@@ -7,5 +7,9 @@
     "createRoomInputLabel": "请输入房间名",
     "orLabel": "或",
     "startLabel": "开始！"
+  },
+  "Toast": {
+    "404NotFoundRoomTitle": "很抱歉，没有找到该房间",
+    "404NotFoundRoomDescription": "请检查您输入的房间号是否正确，或者是询问房主是否已经解散房间"
   }
 }
